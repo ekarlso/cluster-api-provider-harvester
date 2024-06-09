@@ -285,6 +285,20 @@ func (r *HarvesterMachineReconciler) ReconcileNormal(hvScope Scope) (res reconci
 				return ctrl.Result{RequeueAfter: 1 * time.Minute}, err
 			}
 
+			machineAddresses := make([]clusterv1.MachineAddress, 0, len(ipAddresses))
+			for _, addr := range ipAddresses {
+				machineAddresses = append(machineAddresses, clusterv1.MachineAddress{
+					Type:    addr.Type,
+					Address: addr.Address,
+				})
+			}
+
+			machineAddresses = append(machineAddresses, clusterv1.MachineAddress{
+				Type:    clusterv1.MachineInternalDNS,
+				Address: hvScope.HarvesterMachine.GetName(),
+			})
+			hvScope.Machine.Status.Addresses = machineAddresses
+
 			hvScope.HarvesterMachine.Status.Addresses = ipAddresses
 			if len(ipAddresses) > 0 {
 				hvScope.HarvesterMachine.Status.Ready = true
